@@ -1,4 +1,4 @@
-[README in English](https://github.com/kairo913/tasclock/README-en.md)
+[README in English](https://github.com/kairo913/tasclock/blob/main/README-en.md)
 
 # TasClock: タスク管理と時給計算を融合したアプリ
 

@@ -1,4 +1,4 @@
-[README in Japanese](https://github.com/kairo913/tasclock/README.md)
+[README in Japanese](https://github.com/kairo913/tasclock/blob/main/README.md)
 
 # TasClock: Task Management and Time Tracking App
 
