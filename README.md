@@ -28,4 +28,11 @@ NPM (Node 15+)
 
 ## ビルド
 
-再配布可能な本番環境用パッケージをビルドするには、 `wails build` を使用してください。
+再配布可能な本番環境用パッケージをビルドするには、 `wails build` を使用してください。  
+そうすることで、プロジェクトがコンパイルされ、`build/bin` ディレクトリ内に本番配布用のバイナリが出力されます。
+
+## 参考
+
+[Wails: インストール](https://wails.io/ja/docs/gettingstarted/installation)
+
+[Wails: プロジェクトのコンパイル](https://wails.io/ja/docs/gettingstarted/building)

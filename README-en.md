@@ -31,4 +31,11 @@ to this in your browser, and you can call your Go code from devtools.
 
 ## Building
 
-To build a redistributable, production mode package, use `wails build`.
+To build a redistributable, production mode package, use `wails build`.  
+This will compile your project and save the production-ready binary in the `build/bin` directory.
+
+## Reference
+
+[Wails: Installation](https://wails.io/ja/docs/gettingstarted/installation)
+
+[Wails: Compiling your Project](https://wails.io/ja/docs/gettingstarted/building)
