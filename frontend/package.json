@@ -7,7 +7,9 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "check": "svelte-check --tsconfig ./tsconfig.json"
+        "check": "svelte-check --tsconfig ./tsconfig.json",
+        "lint": "eslint src",
+        "lint:fix": "eslint src --fix"
     },
     "devDependencies": {
         "@sveltejs/vite-plugin-svelte": "^3.0.2",
@@ -17,11 +19,12 @@
         "autoprefixer": "^10.4.18",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
-        "eslint-plugin-react": "^7.34.0",
+        "eslint-plugin-svelte": "^2.35.1",
+        "eslint-plugin-tailwindcss": "^3.14.3",
         "postcss": "^8.4.35",
         "prettier": "^3.2.5",
         "prettier-plugin-svelte": "^3.2.2",
-        "prettier-plugin-tailwindcss": "^0.5.11",
+        "prettier-plugin-tailwindcss": "^0.5.12",
         "svelte": "^4.2.12",
         "svelte-check": "^3.6.6",
         "svelte-preprocess": "^5.1.3",
