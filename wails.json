@@ -9,5 +9,9 @@
     "author": {
         "name": "kairo",
         "email": "kairoworks@gmail.com"
+    },
+    "info": {
+        "productName": "TasClock",
+        "productVersion": "0.1.0"
     }
 }
