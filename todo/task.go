@@ -1,9 +1,6 @@
 package todo
 
-import (
-	"fmt"
-	"time"
-)
+import "time"
 
 type Task struct {
 	ID          int64  `json:"id"`          // Task id
@@ -19,7 +16,6 @@ type Task struct {
 }
 
 func (td *Todo) NewTask(list_id int64, title string, starred bool, description string, deadline string, reward int64) (*Task, error) {
-	fmt.Println(starred)
 	task := &Task{
 		ListID:      list_id,
 		Title:       title,
@@ -36,7 +32,6 @@ func (td *Todo) NewTask(list_id int64, title string, starred bool, description s
 
 	r, err := td.db.Exec(sqlStr, task.ListID, task.Title, task.Starred, task.Description, task.Deadline, task.Reward, task.CreatedAt)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

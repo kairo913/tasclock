@@ -3,7 +3,6 @@ package todo
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -56,7 +55,6 @@ func (td *Todo) initDB() error {
 
 	for _, sqlStr := range sqlStrs {
 		if _, err := td.db.Exec(sqlStr); err != nil {
-			fmt.Println(err)
 			return err
 		}
 	}
