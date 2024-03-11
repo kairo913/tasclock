@@ -4,6 +4,9 @@
 
 TasClock is an app that combines task management and time tracking. It measures the time spent on each task and calculates the current hourly rate based on the set unit price.
 
+> [!IMPORTANT]
+> This application is in development and supports only a part of the main features.
+
 ## Main features
 
 -   Create, edit, and delete tasks

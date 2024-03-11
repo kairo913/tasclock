@@ -4,18 +4,28 @@ export default {
     theme: {
         extend: {
             keyframes: {
-                zoom: {
-                    "0%": "transform: scale(0.95)",
-                    "100%": "transform: scale(1)",
+                "zoom": {
+                    "0%": {
+                        transform: "scale(0.99)",
+                        opacity: "0",
+                    },
+                    "100%": {
+                        transform: "scale(1)",
+                        opacity: "1",
+                    },
                 },
-                fade: {
-                    "0%": "opacity: 0",
-                    "100%": "opacity: 1",
+                "fade": {
+                    "0%": {
+                        opacity: "0",
+                    },
+                    "100%": {
+                        opacity: "1",
+                    },
                 },
             },
             animation: {
-                zoom: "zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                fade: "fade 0.2s ease-out",
+                "zoom": "zoom 0.2s ease-out",
+                "fade": "fade 0.2s ease-out",
             },
         },
     },
