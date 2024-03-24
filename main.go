@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"log"
 
 	"github.com/kairo913/tasclock/todo"
 
@@ -32,10 +33,10 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
-			todo.Startup(ctx)
+			todo.Startup()
 		},
 		OnShutdown: func(ctx context.Context) {
-			todo.Shutdown(ctx)
+			todo.Shutdown()
 		},
 		Bind: []interface{}{
 			app,
@@ -44,6 +45,6 @@ func main() {
 	})
 
 	if err != nil {
-		println("Error:", err.Error())
+		log.Fatal(err)
 	}
 }
