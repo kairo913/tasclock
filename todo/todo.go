@@ -1,8 +1,8 @@
 package todo
 
 import (
-	"context"
 	"database/sql"
+	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -15,8 +15,8 @@ func NewTodo() *Todo {
 	return &Todo{}
 }
 
-func (td *Todo) Startup(ctx context.Context) error {
-	db, err := sql.Open("sqlite3", "todo.db")
+func (td *Todo) Startup() error {
+	db, err := sql.Open("sqlite3", "./todo.db")
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (td *Todo) Startup(ctx context.Context) error {
 	return nil
 }
 
-func (td *Todo) Shutdown(ctx context.Context) {
+func (td *Todo) Shutdown() {
 	td.db.Close()
 }
 
@@ -63,8 +63,15 @@ func (td *Todo) initDB() error {
 }
 
 func (td *Todo) Tasks(limit int64) ([]*Task, error) {
-	const sqlStr = `SELECT id, list_id, is_done, starred, title, description, deadline, reward, elapsed, created_at FROM tasks LIMIT ?`
-	rows, err := td.db.Query(sqlStr, limit)
+	stmt, err := td.db.Prepare("SELECT id, list_id, is_done, starred, title, description, deadline, reward, elapsed, created_at FROM tasks LIMIT ?")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(limit)
+
 	if err != nil {
 		return nil, err
 	}
@@ -90,8 +97,15 @@ func (td *Todo) Tasks(limit int64) ([]*Task, error) {
 }
 
 func (td *Todo) Lists(limit int64) ([]*List, error) {
-	const sqlStr = `SELECT id, title FROM lists LIMIT ?`
-	rows, err := td.db.Query(sqlStr, limit)
+	stmt, err := td.db.Prepare("SELECT id, title FROM lists LIMIT ?")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(limit)
+
 	if err != nil {
 		return nil, err
 	}
