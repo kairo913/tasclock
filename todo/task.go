@@ -1,6 +1,9 @@
 package todo
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 type Task struct {
 	ID          int64  `json:"id"`
@@ -28,9 +31,15 @@ func (td *Todo) NewTask(list_id int64, title string, starred bool, description s
 		CreatedAt:   time.Now().Format("2006-01-02T15:04:05Z07:00"),
 	}
 
-	const sqlStr = `INSERT INTO tasks(list_id,title,starred,description,deadline,reward,created_at) VALUES (?,?,?,?,?,?,?);`
+	stmt, err := td.db.Prepare("INSERT INTO tasks(list_id,title,starred,description,deadline,reward,created_at) VALUES (?,?,?,?,?,?,?);")
 
-	r, err := td.db.Exec(sqlStr, task.ListID, task.Title, task.Starred, task.Description, task.Deadline, task.Reward, task.CreatedAt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	r, err := stmt.Exec(task.ListID, task.Title, task.Starred, task.Description, task.Deadline, task.Reward, task.CreatedAt)
+
 	if err != nil {
 		return nil, err
 	}
@@ -46,20 +55,35 @@ func (td *Todo) NewTask(list_id int64, title string, starred bool, description s
 }
 
 func (td *Todo) RemoveTask(id int64) error {
-	const sqlStr = `DELETE FROM tasks WHERE id = ?;`
+	stmt, err := td.db.Prepare("DELETE FROM tasks WHERE id = ?;")
 
-	_, err := td.db.Exec(sqlStr, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	stmt.Close()
+
+	_, err = stmt.Exec(id)
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (td *Todo) UpdateTask(task *Task) error {
-	const sqlStr = `UPDATE tasks SET list_id = ?, title = ?, is_done = ?, starred = ?, description = ?, deadline = ?, reward = ?, elapsed = ? WHERE id = ?`
-	_, err := td.db.Exec(sqlStr, task.ListID, task.Title, task.IsDone, task.Starred, task.Description, task.Deadline, task.Reward, task.Elapsed, task.ID)
+	stmt, err := td.db.Prepare("UPDATE tasks SET list_id = ?, title = ?, is_done = ?, starred = ?, description = ?, deadline = ?, reward = ?, elapsed = ? WHERE id = ?;")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(task.ListID, task.Title, task.IsDone, task.Starred, task.Description, task.Deadline, task.Reward, task.Elapsed, task.ID)
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
