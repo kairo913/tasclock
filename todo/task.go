@@ -3,16 +3,16 @@ package todo
 import "time"
 
 type Task struct {
-	ID          int64  `json:"id"`          // Task id
-	ListID      int64  `json:"list_id"`     // List id
-	Title       string `json:"title"`       // Task title
-	IsDone      bool   `json:"is_done"`     // Is task completed
-	Starred     bool   `json:"starred"`     // Is task starred
-	Description string `json:"description"` // Task description
-	Deadline    string `json:"deadline"`    // Task deadline
-	Reward      int64  `json:"reward"`      // Task reward
-	Elapsed     int64  `json:"elapsed"`     // Elapsed time of task
-	CreatedAt   string `json:"created_at"`  // Time task created
+	ID          int64  `json:"id"`
+	ListID      int64  `json:"list_id"`
+	Title       string `json:"title"`
+	IsDone      bool   `json:"is_done"`
+	Starred     bool   `json:"starred"`
+	Description string `json:"description"`
+	Deadline    string `json:"deadline"`
+	Reward      int64  `json:"reward"`
+	Elapsed     int64  `json:"elapsed"`
+	CreatedAt   string `json:"created_at"`
 }
 
 func (td *Todo) NewTask(list_id int64, title string, starred bool, description string, deadline string, reward int64) (*Task, error) {
