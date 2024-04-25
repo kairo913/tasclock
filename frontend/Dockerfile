@@ -4,6 +4,6 @@ WORKDIR /web
 
 COPY package.json /web/package.json
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.0.4
 
 RUN pnpm install
