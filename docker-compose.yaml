@@ -14,16 +14,16 @@ services:
       - go_build_cache:/app/tmp
     working_dir: /app
     command: sh -c "go mod tidy && air"
-  web:
-    container_name: web
-    build: frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend/src:/web/src:cached
-      - ./frontend/static:/web/static
-      - ./frontend/vite.config.ts:/web/vite.config.ts
-      - ./frontend/tsconfig.json:/web/tsconfig.json
-      - ./frontend/svelte.config.js:/web/svelte.config.js
-    working_dir: /web
-    command: sh -c "pnpm run dev"
+  # web:
+  #   container_name: web
+  #   build: frontend
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend/src:/web/src:cached
+  #     - ./frontend/static:/web/static
+  #     - ./frontend/vite.config.ts:/web/vite.config.ts
+  #     - ./frontend/tsconfig.json:/web/tsconfig.json
+  #     - ./frontend/svelte.config.js:/web/svelte.config.js
+  #   working_dir: /web
+  #   command: sh -c "pnpm run dev"
