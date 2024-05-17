@@ -7,7 +7,7 @@ services:
     container_name: go
     build: backend
     ports:
-      - "8080:8080"
+      - "5000:5000"
     volumes:
       - ./backend:/app
       - go_build_cache:/app/tmp
