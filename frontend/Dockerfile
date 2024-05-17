@@ -1,9 +1,11 @@
-FROM node:21-bookworm-slim
+# Stage 1: Build the app
+FROM node:22-bookworm-slim
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
-WORKDIR /web
+WORKDIR /app
 
-COPY package.json /web/package.json
-
-RUN npm install -g pnpm@9.0.4
+COPY ./package.json /app/package.json
 
 RUN pnpm install
