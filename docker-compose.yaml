@@ -1,13 +1,17 @@
 volumes:
   go_build_cache:
   node_modules:
+  mysql_data:
 
 services:
   go:
     container_name: go
     build: backend
+    tty: true
     ports:
       - "5000:5000"
+    env_file:
+      - ./backend/.env
     volumes:
       - ./backend:/app
       - go_build_cache:/app/tmp
@@ -16,10 +20,24 @@ services:
   web:
     container_name: web
     build: frontend
+    tty: true
     ports:
       - "3000:3000"
+    env_file:
+      - ./frontend/.env
     volumes:
       - ./frontend:/app:cached
       - node_modules:/app/node_modules
     working_dir: /app
     command: sh -c "pnpm run dev"
+  db:
+    container_name: db
+    build: db
+    tty: true
+    ports:
+      - "3306:3306"
+    env_file:
+      - ./db/.env
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - /db/init:/docker-entrypoint-initdb.d/
