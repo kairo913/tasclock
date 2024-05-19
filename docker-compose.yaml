@@ -17,6 +17,8 @@ services:
       - go_build_cache:/app/tmp
     working_dir: /app
     command: sh -c "go mod tidy && air"
+    depends_on:
+      - db
   web:
     container_name: web
     build: frontend
@@ -30,6 +32,8 @@ services:
       - node_modules:/app/node_modules
     working_dir: /app
     command: sh -c "pnpm run dev"
+    depends_on:
+      - go
   db:
     container_name: db
     build: db
