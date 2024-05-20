@@ -20,9 +20,18 @@ func main() {
 	defer stop()
 
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
+	r.POST("/api/user/get", func(ctx *gin.Context) {
+		email := ctx.Query("email")
+		password := ctx.Query("pass")
+		u, err := user.Get(email, password)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"user": u,
 		})
 	})
 	r.POST("/api/user/auth", func(ctx *gin.Context) {
@@ -43,15 +52,36 @@ func main() {
 		name := ctx.Query("name")
 		email := ctx.Query("email")
 		password := ctx.Query("pass")
-		user, err := user.Create(name, email, password)
+		u, err := user.Create(name, email, password)
 		if err != nil {
 			ctx.JSON(400, gin.H{
-				"message": err.Error(),
+				"result": err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"user": user,
+			"user": u,
+		})
+	})
+	r.POST("/api/user/delete", func(ctx *gin.Context) {
+		email := ctx.Query("email")
+		password := ctx.Query("pass")
+		u, err := user.Get(email, password)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		err = u.Delete()
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"result": "success",
 		})
 	})
 

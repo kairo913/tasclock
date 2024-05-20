@@ -13,6 +13,12 @@ import (
 var Db *sql.DB
 var Layout = "2006-01-02 15:04:05"
 
+type TrashScanner struct {}
+
+func (TrashScanner) Scan(interface{}) error {
+	return nil
+}
+
 func Init() {
 	user := os.Getenv("MYSQL_USER")
 	pw := os.Getenv("MYSQL_PASSWORD")
