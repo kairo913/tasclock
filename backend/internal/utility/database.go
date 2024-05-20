@@ -11,6 +11,7 @@ import (
 )
 
 var Db *sql.DB
+var Layout = "2006-01-02 15:04:05"
 
 func Init() {
 	user := os.Getenv("MYSQL_USER")
@@ -31,7 +32,11 @@ func checkConnect(count uint) {
 	if err := Db.Ping(); err != nil {
 		time.Sleep(time.Second * 2)
 		count--
+		if count == 0 {
+			log.Fatal("Db connection failed!")
+		}
 		fmt.Printf("Retry connect to db, %d times left\n", count)
 		checkConnect(count)
 	}
 }
+
