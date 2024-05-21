@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -16,9 +15,9 @@ import (
 
 type User struct {
 	Id        int
-	Name      string `validate:"required,min=1,max=100"`
+	Name      string `validate:"required,min=5,max=100"`
 	Email     string `validate:"required,email"`
-	Password  string `validate:"required,min=8,max=40"`
+	Password  string `validate:"required"`
 	Salt 	  string `validate:"required"`
 	CreatedAt string `validate:"required"`
 	UpdatedAt string `validate:"required"`
@@ -26,17 +25,17 @@ type User struct {
 
 var validate *validator.Validate
 
-func makeRandomStr(length int) (string, error) {
+func makeRandomStr(length int) string {
 	b := make([]byte, length)
 	if _, err := rand.Read(b); err != nil {
-		return "", errors.New("failed to generate random string")
+		return ""
 	}
 
 	var result string
 	for _, v := range b {
 		result += string(v%byte(94) + 33)
 	}
-	return result, nil
+	return result
 }
 
 func encrypt(char string, count int) string {
@@ -47,20 +46,18 @@ func encrypt(char string, count int) string {
 	return fmt.Sprintf("%x", hash)
 }
 
-func Create(name string, email string, password string) (*User, error) {
-	if name == "" || email == "" || password == "" {
-		return nil, fmt.Errorf("name, email or password is empty")
-	}
-
-	salt, err := makeRandomStr(20)
-	if err != nil {
-		return nil, err
+func Create(name string, email string, password string) (*User, []error) {
+	count := 50
+	salt := makeRandomStr(20)
+	for salt == "" && count > 0 {
+		salt = makeRandomStr(20)
+		count--
 	}
 
 	user := &User{
 		Name:      name,
 		Email:     email,
-		Password:  password + salt + os.Getenv("PEPPER"),
+		Password:  password,
 		Salt:      salt,
 		CreatedAt: time.Now().Format(utility.Layout),
 		UpdatedAt: time.Now().Format(utility.Layout),
@@ -68,32 +65,32 @@ func Create(name string, email string, password string) (*User, error) {
 
 	validate = validator.New()
 
-	err = validate.Struct(user)
-
-	if err != nil {
-		if _, ok := err.(*validator.InvalidValidationError); ok {
-			return nil, err
+	if err := validate.Struct(user); err != nil {
+		errMessages := handleValidateError(err)
+		if errMessages != nil {
+			return nil, errMessages
 		}
-		return nil, err
 	}
+
+	user.Password = encrypt(user.Password + salt + os.Getenv("PEPPER"), 10000)
 
 	trashScanners := make([]interface{}, 7)
 	for i := 0; i < 7; i++ {
 		trashScanners[i] = &utility.TrashScanner{}
 	}
-	if err = utility.Db.QueryRow("SELECT * FROM users WHERE email = ?", user.Email).Scan(trashScanners...); err == nil {
-		return nil, fmt.Errorf("email is already registered")
+	if err := utility.Db.QueryRow("SELECT * FROM users WHERE email = ?", user.Email).Scan(trashScanners...); err == nil {
+		return nil, []error{fmt.Errorf("email is already registered")}
 	}
 
 	user.Password = encrypt(user.Password, 10000)
 
 	r, err := utility.Db.Exec("INSERT INTO users (name, email, password, salt, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", user.Name, user.Email, user.Password, user.Salt, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
-		return nil, err
+		return nil, []error{err}
 	}
 	id, err := r.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, []error{err}
 	}
 	user.Id = int(id)
 	return user, nil
@@ -138,14 +135,77 @@ func Auth(email string, password string) error {
 	return nil
 }
 
-func (user *User) UpdatePassword(password string) error {
-	salt, err := makeRandomStr(20)
+func (user *User) UpdateName(name string) error {
+	if name == "" {
+		user.Name = ""
+	} else {
+		user.Name = name
+	}
+	user.UpdatedAt = time.Now().Format(utility.Layout)
+
+	validate = validator.New()
+	err := validate.Struct(user)
+	if err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			return err
+		}
+		return err
+	}
+
+	r, err := utility.Db.Exec("UPDATE users SET name = ?, updated_at = ? WHERE id = ?", user.Name, user.UpdatedAt, user.Id)
 	if err != nil {
 		return err
 	}
-	user.Salt = salt
-	user.Password = encrypt(password + user.Salt + os.Getenv("PEPPER"), 10000)
+	if c, err := r.RowsAffected(); err != nil || c == 0 {
+		return fmt.Errorf("failed to update name")
+	}
+	return nil
+}
+
+func (user *User) UpdateEmail(email string) error {
+	if email == "" {
+		return fmt.Errorf("email is empty")
+	}
+	user.Email = email
 	user.UpdatedAt = time.Now().Format(utility.Layout)
+
+	err := validate.Struct(user)
+	if err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			return err
+		}
+		return err
+	}
+
+	r, err := utility.Db.Exec("UPDATE users SET email = ?, updated_at = ? WHERE id = ?", user.Email, user.UpdatedAt, user.Id)
+	if err != nil {
+		return err
+	}
+	if c, err := r.RowsAffected(); err != nil || c == 0 {
+		return fmt.Errorf("failed to update email")
+	}
+	return nil
+}
+
+func (user *User) UpdatePassword(password string) error {
+	if password == "" {
+		return fmt.Errorf("password is empty")
+	}
+	salt := makeRandomStr(20)
+	user.Password = password
+	user.Salt = salt
+	user.UpdatedAt = time.Now().Format(utility.Layout)
+
+	err := validate.Struct(user)
+	if err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			return err
+		}
+		return err
+	}
+
+	user.Password = encrypt(password + user.Salt + os.Getenv("PEPPER"), 10000)
+
 	r, err := utility.Db.Exec("UPDATE users SET password = ?, salt = ?, updated_at = ? WHERE id = ?", user.Password, user.Salt, user.UpdatedAt, user.Id)
 	if err != nil {
 		return err
@@ -166,4 +226,44 @@ func (user *User) Delete() error {
 	}
 
 	return nil
+}
+
+func handleValidateError(err error) []error {
+	if err == nil {
+		return nil
+	}
+	if _, ok := err.(*validator.InvalidValidationError); ok {
+		return []error{err}
+	}
+	var errorMessages []error
+	for _, err := range err.(validator.ValidationErrors) {
+		var errorMessage error
+		fieldName := err.Field()
+		switch fieldName {
+			case "Name":
+				errorTag := err.Tag()
+				switch errorTag {
+					case "required":
+						errorMessage = fmt.Errorf("name is required")
+					case "min":
+						errorMessage = fmt.Errorf("name length must be at least 5")
+					case "max":
+						errorMessage = fmt.Errorf("name length must be at most 100")
+				}
+			case "Email":
+				errorTag := err.Tag()
+				switch errorTag {
+					case "required":
+						errorMessage = fmt.Errorf("email is required")
+					case "email":
+						errorMessage = fmt.Errorf("email is invalid")
+				}
+			case "Password":
+				errorMessage = fmt.Errorf("password is required")
+			case "Salt", "CreatedAt", "UpdatedAt":
+				errorMessage = fmt.Errorf("something went wrong")
+		}
+		errorMessages = append(errorMessages, errorMessage)
+	}
+	return errorMessages
 }

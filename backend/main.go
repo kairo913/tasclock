@@ -54,13 +54,83 @@ func main() {
 		password := ctx.Query("pass")
 		u, err := user.Create(name, email, password)
 		if err != nil {
+			res := ""
+			for _, e := range err {
+				res += e.Error() + "\n"
+			}
+			ctx.JSON(400, gin.H{
+				"result": res,
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"user": u,
+		})
+	})
+	r.POST("/api/user/update/name", func(ctx *gin.Context) {
+		email := ctx.Query("email")
+		password := ctx.Query("pass")
+		name := ctx.Query("name")
+		u, err := user.Get(email, password)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		err = u.UpdateName(name)
+		if err != nil {
 			ctx.JSON(400, gin.H{
 				"result": err.Error(),
 			})
 			return
 		}
 		ctx.JSON(200, gin.H{
-			"user": u,
+			"result": "success",
+		})
+	})
+	r.POST("/api/user/update/email", func(ctx *gin.Context) {
+		email := ctx.Query("email")
+		password := ctx.Query("pass")
+		newemail := ctx.Query("newemail")
+		u, err := user.Get(email, password)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		err = u.UpdateEmail(newemail)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"result": "success",
+		})
+	})
+	r.POST("/api/user/update/password", func(ctx *gin.Context) {
+		email := ctx.Query("email")
+		password := ctx.Query("pass")
+		newpassword := ctx.Query("newpass")
+		u, err := user.Get(email, password)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		err = u.UpdatePassword(newpassword)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"result": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"result": "success",
 		})
 	})
 	r.POST("/api/user/delete", func(ctx *gin.Context) {
