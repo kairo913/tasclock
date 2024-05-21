@@ -5,11 +5,12 @@ volumes:
 
 services:
   go:
-    container_name: go
-    build: backend
+    build:
+      context: backend
+      dockerfile: Dockerfile
     tty: true
     ports:
-      - "5000:5000"
+      - "8000:8000"
     env_file:
       - ./backend/.env
     volumes:
@@ -20,11 +21,12 @@ services:
     depends_on:
       - db
   web:
-    container_name: web
-    build: frontend
+    build:
+      context: frontend
+      dockerfile: Dockerfile
     tty: true
     ports:
-      - "3000:3000"
+      - "8080:8080"
     env_file:
       - ./frontend/.env
     volumes:
@@ -35,8 +37,9 @@ services:
     depends_on:
       - go
   db:
-    container_name: db
-    build: db
+    build:
+      context: db
+      dockerfile: Dockerfile
     tty: true
     ports:
       - "3306:3306"
