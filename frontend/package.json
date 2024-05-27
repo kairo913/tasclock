@@ -33,5 +33,8 @@
 		"vite": "^5.2.11"
 	},
 	"type": "module",
-	"packageManager": "pnpm@9.1.2"
+	"packageManager": "pnpm@9.1.2",
+	"dependencies": {
+		"@tabler/icons-svelte": "^3.5.0"
+	}
 }
