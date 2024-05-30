@@ -3,10 +3,10 @@ package user
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
-
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ import (
 type JsonUser struct {
 	Name     string `json:"name" validate:"required,min=5,max=100"`
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=100"`
+	Password string `json:"password" validate:"required"`
 }
 
 type User struct {
@@ -124,15 +124,44 @@ func Create(c *gin.Context) {
 	}
 }
 
-func Update(c *gin.Context) {
+func Auth(c *gin.Context) {
 	var body JsonUser
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
+
+	if !validateUser(&body) {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	user := &User{}
+
+	if err := utility.Db.QueryRow("SELECT * FROM users WHERE email = ? LIMIT 1", body.Email).Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.Salt, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	if user.Password != encrypt(body.Password+user.Salt+os.Getenv("PEPPER"), 100000) {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	if os.Getenv("ENV") == "dev" {
+		c.IndentedJSON(http.StatusOK, user)
+		return
+	}
+
+	if os.Getenv("ENV") == "prod" {
+		c.Status(http.StatusOK)
+		return
+	}
 }
-
-
 
 // func Create(name string, email string, password string) (*User, []error) {
 // 	count := 50
