@@ -62,7 +62,7 @@ func validateUser(user *JsonUser) bool {
 	return true
 }
 
-func Create(c *gin.Context) {
+func SignUp(c *gin.Context) {
 	var body JsonUser
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.Status(http.StatusBadRequest)
@@ -124,7 +124,7 @@ func Create(c *gin.Context) {
 	}
 }
 
-func Auth(c *gin.Context) {
+func SignIn(c *gin.Context) {
 	var body JsonUser
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.Status(http.StatusBadRequest)

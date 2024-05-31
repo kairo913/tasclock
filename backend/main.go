@@ -21,8 +21,8 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/api/user/signup", user.Create)
-	r.POST("/api/user/login", user.Auth)
+	r.POST("/api/user/signup", user.SignUp)
+	r.POST("/api/user/signin", user.SignIn)
 
 	srv := &http.Server{
 		Addr:    ":8000",
