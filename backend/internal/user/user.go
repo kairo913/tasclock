@@ -15,8 +15,13 @@ import (
 	"github.com/go-playground/validator"
 )
 
-type JsonUser struct {
+type JsonUserSignUp struct {
 	Name     string `json:"name" validate:"required,min=5,max=100"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+type JsonUserSignIn struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
@@ -30,8 +35,6 @@ type User struct {
 	CreatedAt string
 	UpdatedAt string
 }
-
-var validate *validator.Validate
 
 func makeRandomStr(length int) string {
 	b := make([]byte, length)
@@ -54,22 +57,15 @@ func encrypt(char string, count int) string {
 	return fmt.Sprintf("%x", hash)
 }
 
-func validateUser(user *JsonUser) bool {
-	validate = validator.New()
-	if err := validate.Struct(user); err != nil {
-		return false
-	}
-	return true
-}
-
 func SignUp(c *gin.Context) {
-	var body JsonUser
+	var body JsonUserSignUp
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	if !validateUser(&body) {
+	validate := validator.New()
+	if err := validate.Struct(body); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -89,12 +85,12 @@ func SignUp(c *gin.Context) {
 		Name:      body.Name,
 		Email:     body.Email,
 		Password:  encrypt(body.Password+salt+os.Getenv("PEPPER"), 100000),
-		Salt:      makeRandomStr(20),
+		Salt:      salt,
 		CreatedAt: time.Now().Format(utility.Layout),
 		UpdatedAt: time.Now().Format(utility.Layout),
 	}
 
-	if err := utility.Db.QueryRow("SELECT TOP (1) id FROM users WHERE email = ?", user.Email).Scan(utility.TrashScanner{}); err == nil {
+	if err := utility.Db.QueryRow("SELECT id FROM users WHERE email = ? LIMIT 1", user.Email).Scan(utility.TrashScanner{}); err == nil {
 		c.Status(http.StatusConflict)
 		return
 	}
@@ -125,13 +121,14 @@ func SignUp(c *gin.Context) {
 }
 
 func SignIn(c *gin.Context) {
-	var body JsonUser
+	var body JsonUserSignIn
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	if !validateUser(&body) {
+	validate := validator.New()
+	if err := validate.Struct(body); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -158,7 +155,7 @@ func SignIn(c *gin.Context) {
 	}
 
 	if os.Getenv("ENV") == "prod" {
-		c.Status(http.StatusOK)
+		c.JSON(http.StatusOK, user.Name)
 		return
 	}
 }
