@@ -15,7 +15,8 @@ import (
 )
 
 func main() {
-	utility.Init()
+	utility.InitDB()
+	utility.InitRDB()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

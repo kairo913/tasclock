@@ -1,7 +1,6 @@
 package model
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
 	"fmt"
@@ -37,17 +36,9 @@ type User struct {
 	UpdatedAt string
 }
 
-func makeRandomStr(length int) string {
-	b := make([]byte, length)
-	if _, err := rand.Read(b); err != nil {
-		return ""
-	}
-
-	var result string
-	for _, v := range b {
-		result += string(v%byte(94) + 33)
-	}
-	return result
+type SessionClaims struct {
+	SessionId string
+	jwt.RegisteredClaims
 }
 
 func encrypt(char string, count int) string {
@@ -56,6 +47,22 @@ func encrypt(char string, count int) string {
 		hash = sha256.Sum256(hash[:])
 	}
 	return fmt.Sprintf("%x", hash)
+}
+
+func makeSessionId(c *gin.Context) string {
+	sessionId := utility.MakeRandomStr(64)
+	if sessionId == "" {
+		return ""
+	}
+
+	userId, err := utility.GetSession(c, sessionId)
+	if err != nil {
+		return ""
+	}
+	if userId != "" {
+		return makeSessionId(c)
+	}
+	return sessionId
 }
 
 func SignUp(c *gin.Context) {
@@ -71,12 +78,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	salt := makeRandomStr(20)
-	count := 10
-	for salt == "" && count > 0 {
-		salt = makeRandomStr(20)
-		count--
-	}
+	salt := utility.MakeRandomStr(20)
 	if salt == "" {
 		c.Status(http.StatusInternalServerError)
 		return
@@ -150,11 +152,22 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iss": "tasclock",
-		"aud": user.Id,
-		"exp": time.Now().Add(time.Hour).Unix(),
-		"iat": time.Now().Unix(),
+	sessionId := makeSessionId(c)
+	if sessionId == "" {
+		c.Status(http.StatusInternalServerError)
+		fmt.Println("failed to make session id")
+		return
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &SessionClaims{
+		SessionId: sessionId,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:   "tasclock",
+			Audience: []string{fmt.Sprint(user.Id)},
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+		},
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
@@ -162,14 +175,25 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	c.Header("Authorization", tokenString)
+	if err := utility.NewSession(c, sessionId, fmt.Sprint(user.Id)); err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	cookieKey := os.Getenv("COOKIE_KEY")
+	if cookieKey == "" {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	if os.Getenv("ENV") == "dev" {
+		c.SetCookie(cookieKey, tokenString, 3600, "/", "", false, true)
 		c.IndentedJSON(http.StatusOK, user)
 		return
 	}
 
 	if os.Getenv("ENV") == "prod" {
+		c.SetCookie(cookieKey, tokenString, 3600, "/", "", true, true)
 		c.Status(http.StatusOK)
 		return
 	}

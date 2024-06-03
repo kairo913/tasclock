@@ -19,7 +19,7 @@ func (TrashScanner) Scan(interface{}) error {
 	return nil
 }
 
-func Init() {
+func InitDB() {
 	user := os.Getenv("MYSQL_USER")
 	pw := os.Getenv("MYSQL_PASSWORD")
 	db_name := os.Getenv("MYSQL_DATABASE")
@@ -29,12 +29,12 @@ func Init() {
 	if Db, err = sql.Open("mysql", path); err != nil {
 		log.Fatal("Db open error: ", err.Error())
 	}
-	checkConnect(100)
+	checkDBConnect(100)
 
 	fmt.Println("db connected!")
 }
 
-func checkConnect(count uint) {
+func checkDBConnect(count uint) {
 	if err := Db.Ping(); err != nil {
 		time.Sleep(time.Second * 2)
 		count--
@@ -42,7 +42,7 @@ func checkConnect(count uint) {
 			log.Fatal("Db connection failed!")
 		}
 		fmt.Printf("Retry connect to db, %d times left\n", count)
-		checkConnect(count)
+		checkDBConnect(count)
 	}
 }
 
