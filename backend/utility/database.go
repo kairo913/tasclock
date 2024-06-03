@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -19,7 +20,7 @@ func (TrashScanner) Scan(interface{}) error {
 	return nil
 }
 
-func InitDB() {
+func InitDB(c context.Context) {
 	user := os.Getenv("MYSQL_USER")
 	pw := os.Getenv("MYSQL_PASSWORD")
 	db_name := os.Getenv("MYSQL_DATABASE")
@@ -29,20 +30,20 @@ func InitDB() {
 	if Db, err = sql.Open("mysql", path); err != nil {
 		log.Fatal("Db open error: ", err.Error())
 	}
-	checkDBConnect(100)
+	checkDBConnect(c, 100)
 
 	fmt.Println("db connected!")
 }
 
-func checkDBConnect(count uint) {
-	if err := Db.Ping(); err != nil {
+func checkDBConnect(c context.Context, count uint) {
+	if err := Db.PingContext(c); err != nil {
 		time.Sleep(time.Second * 2)
 		count--
 		if count == 0 {
 			log.Fatal("Db connection failed!")
 		}
 		fmt.Printf("Retry connect to db, %d times left\n", count)
-		checkDBConnect(count)
+		checkDBConnect(c, count)
 	}
 }
 

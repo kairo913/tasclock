@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -15,11 +16,10 @@ import (
 )
 
 func main() {
-	utility.InitDB()
-	utility.InitRDB()
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	utility.Init(ctx)
 
 	r := gin.Default()
 
@@ -40,6 +40,7 @@ func main() {
 	}()
 
 	<-ctx.Done()
+	log.Println("shutting down...")
 
 	stop()
 	log.Println("shutting down...")

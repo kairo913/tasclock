@@ -44,9 +44,15 @@ func AuthMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	if userId == "" || userId != claims.Audience[0] {
+	if userId == "" {
 		c.Status(http.StatusUnauthorized)
 		c.Abort()
+		return
+	}
+	if userId != claims.Audience[0] {
+		c.Status(http.StatusUnauthorized)
+		c.Abort()
+		utility.ResetAllSession(c)
 		return
 	}
 
