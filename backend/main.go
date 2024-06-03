@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kairo913/tasclock/internal/user"
-	"github.com/kairo913/tasclock/internal/utility"
+	"github.com/kairo913/tasclock/controller"
+	"github.com/kairo913/tasclock/model"
+	"github.com/kairo913/tasclock/utility"
 )
 
 func main() {
@@ -21,8 +22,10 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/api/user/signup", user.SignUp)
-	r.POST("/api/user/signin", user.SignIn)
+	r.POST("/api/user/signup", model.SignUp)
+	r.POST("/api/user/signin", model.SignIn)
+
+	r.GET("/api/user/admin", controller.AuthMiddleware, model.UserAdmin)
 
 	srv := &http.Server{
 		Addr:    ":8000",

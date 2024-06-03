@@ -1,4 +1,4 @@
-package user
+package model
 
 import (
 	"crypto/rand"
@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kairo913/tasclock/internal/utility"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/kairo913/tasclock/utility"
 
 	"github.com/go-playground/validator"
 )
@@ -149,13 +150,31 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss": "tasclock",
+		"aud": user.Id,
+		"exp": time.Now().Add(time.Hour).Unix(),
+		"iat": time.Now().Unix(),
+	})
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	c.Header("Authorization", tokenString)
+
 	if os.Getenv("ENV") == "dev" {
 		c.IndentedJSON(http.StatusOK, user)
 		return
 	}
 
 	if os.Getenv("ENV") == "prod" {
-		c.JSON(http.StatusOK, user.Name)
+		c.Status(http.StatusOK)
 		return
 	}
+}
+
+func UserAdmin(c *gin.Context) {
+	c.JSON(http.StatusOK, "admin")
 }
