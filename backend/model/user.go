@@ -169,7 +169,7 @@ func SignIn(c *gin.Context) {
 			NotBefore: jwt.NewNumericDate(time.Now()),
 		},
 	})
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(utility.JWTSecrets[0]))
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return

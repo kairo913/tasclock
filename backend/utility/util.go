@@ -3,7 +3,6 @@ package utility
 import (
 	"context"
 	"crypto/rand"
-	"fmt"
 	"log"
 	"time"
 )
@@ -39,15 +38,13 @@ func ResetAllSession(c context.Context) {
 func lotateJWTSecret() {
 	JWTSecrets[1] = JWTSecrets[0]
 	JWTSecrets[0] = MakeRandomStr(64)
-	fmt.Println("JWT secret lotated!")
-	fmt.Println(JWTSecrets)
 }
 
 func Init(c context.Context) {
 	InitDB(c)
 	InitRDB(c)
 	JWTSecrets[0] = MakeRandomStr(64)
-	ticker := time.NewTicker(time.Second * 5)
+	ticker := time.NewTicker(time.Hour)
 	go func() {
 		defer ticker.Stop()
 	LOOP:
@@ -59,8 +56,5 @@ func Init(c context.Context) {
 				lotateJWTSecret()
 			}
 		}
-
-		ticker.Stop()
-		fmt.Println("ticker stopped!")
 	}()
 }

@@ -19,21 +19,30 @@ func AuthMiddleware(c *gin.Context) {
 	}
 	tokenString, _ := c.Cookie(cookieKey)
 
-	token, err := jwt.ParseWithClaims(tokenString, &model.SessionClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-	if err != nil || !token.Valid {
+	var token *jwt.Token
+	var err error
+	for _, secret := range utility.JWTSecrets {
+		token, err = jwt.ParseWithClaims(tokenString, &model.SessionClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(secret), nil
+		})
+		if err != nil || !token.Valid {
+			token = nil
+		} else {
+			break
+		}
+	}
+	if token == nil {
 		c.Status(http.StatusUnauthorized)
 		c.Abort()
 		return
 	}
 	claims, ok := token.Claims.(*model.SessionClaims)
 	if !ok {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusUnauthorized)
 		c.Abort()
 		return
 	}
-	if claims.SessionId == "" || claims.Audience[0] == "" {
+	if claims.SessionId == "" || claims.Audience[0] == "" || claims.Issuer != "tasclock" {
 		c.Status(http.StatusUnauthorized)
 		c.Abort()
 		return
