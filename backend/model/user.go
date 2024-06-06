@@ -112,15 +112,7 @@ func SignUp(c *gin.Context) {
 
 	user.Id = int(id)
 
-	if os.Getenv("ENV") == "dev" {
-		c.IndentedJSON(http.StatusCreated, user)
-		return
-	}
-
-	if os.Getenv("ENV") == "prod" {
-		c.JSON(http.StatusCreated, user.Name)
-		return
-	}
+	c.JSON(http.StatusCreated, user.Name)
 }
 
 func SignIn(c *gin.Context) {
@@ -180,23 +172,8 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	cookieKey := os.Getenv("COOKIE_KEY")
-	if cookieKey == "" {
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	if os.Getenv("ENV") == "dev" {
-		c.SetCookie(cookieKey, tokenString, 3600, "/", "", false, true)
-		c.IndentedJSON(http.StatusOK, user)
-		return
-	}
-
-	if os.Getenv("ENV") == "prod" {
-		c.SetCookie(cookieKey, tokenString, 3600, "/", "", true, true)
-		c.Status(http.StatusOK)
-		return
-	}
+	c.Header("Authorization", "Bearer " + tokenString)
+	c.JSON(http.StatusOK, user.Name)
 }
 
 func UserAdmin(c *gin.Context) {

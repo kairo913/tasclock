@@ -2,7 +2,7 @@ package controller
 
 import (
 	"net/http"
-	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -11,13 +11,14 @@ import (
 )
 
 func AuthMiddleware(c *gin.Context) {
-	cookieKey := os.Getenv("COOKIE_KEY")
-	if cookieKey == "" {
-		c.Status(http.StatusInternalServerError)
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		c.Header("WWW-Authenticate", "Bearer realm=\"token_required\"")
+		c.Status(http.StatusUnauthorized)
 		c.Abort()
 		return
 	}
-	tokenString, _ := c.Cookie(cookieKey)
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
 	var token *jwt.Token
 	var err error
@@ -32,18 +33,21 @@ func AuthMiddleware(c *gin.Context) {
 		}
 	}
 	if token == nil {
+		c.Header("WWW-Authenticate", "Bearer error=\"invalid_token\"")
 		c.Status(http.StatusUnauthorized)
 		c.Abort()
 		return
 	}
 	claims, ok := token.Claims.(*model.SessionClaims)
 	if !ok {
+		c.Header("WWW-Authenticate", "Bearer error=\"invalid_token\"")
 		c.Status(http.StatusUnauthorized)
 		c.Abort()
 		return
 	}
 	if claims.SessionId == "" || claims.Audience[0] == "" || claims.Issuer != "tasclock" {
-		c.Status(http.StatusUnauthorized)
+		c.Header("WWW-Authenticate", "Bearer error=\"invalid_request\"")
+		c.Status(http.StatusBadRequest)
 		c.Abort()
 		return
 	}
@@ -54,12 +58,14 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 	if userId == "" {
-		c.Status(http.StatusUnauthorized)
+		c.Header("WWW-Authenticate", "Bearer error=\"invalid_request\"")
+		c.Status(http.StatusBadRequest)
 		c.Abort()
 		return
 	}
 	if userId != claims.Audience[0] {
-		c.Status(http.StatusUnauthorized)
+		c.Header("WWW-Authenticate", "Bearer error=\"insufficient_scope\"")
+		c.Status(http.StatusForbidden)
 		c.Abort()
 		utility.ResetAllSession(c)
 		return
