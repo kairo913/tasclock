@@ -40,7 +40,6 @@ func main() {
 	}()
 
 	<-ctx.Done()
-	log.Println("shutting down...")
 
 	stop()
 	log.Println("shutting down...")
