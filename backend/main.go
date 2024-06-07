@@ -19,6 +19,14 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	target := os.Getenv("ENV")
+	if target != "prod" {
+		target = "dev"
+	}
+	if target == "prod" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	utility.Init(ctx)
 
 	r := gin.Default()
