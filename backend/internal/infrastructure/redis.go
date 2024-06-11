@@ -24,7 +24,7 @@ func checkRedisConnect(rdb *redis.Client, count int) error {
 	return nil
 }
 
-func NewRedisHandler() *RedisHandler {
+func NewRedishandler() *RedisHandler {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "redis:6379",
 		Password: "",

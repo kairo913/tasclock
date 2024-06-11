@@ -9,32 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/kairo913/tasclock/controller"
-	"github.com/kairo913/tasclock/model"
-	"github.com/kairo913/tasclock/utility"
+	"github.com/kairo913/tasclock/internal/infrastructure"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	target := os.Getenv("ENV")
-	if target != "prod" {
-		target = "dev"
-	}
-	if target == "prod" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	utility.Init(ctx)
-
-	r := gin.Default()
-
-	r.POST("/api/user/signup", model.SignUp)
-	r.POST("/api/user/signin", model.SignIn)
-
-	r.GET("/api/user/admin", controller.AuthMiddleware, model.UserAdmin)
+	r := infrastructure.SetUpRouter(ctx)
 
 	srv := &http.Server{
 		Addr:    ":8000",

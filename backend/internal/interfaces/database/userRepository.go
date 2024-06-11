@@ -8,7 +8,7 @@ type UserRepository struct {
 
 func (repo *UserRepository) Store(u model.User) (id int64, err error) {
 	r, err := repo.Sqlhandler.Execute(
-		"INSERT INTO users (firstname, lastname, email, password, salt, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", u.FirstName, u.LastName, u.Email, u.Password, u.Salt, u.CreatedAt, u.UpdatedAt,
+		"INSERT INTO users (firstname, lastname, email, password, salt) VALUES (?, ?, ?, ?, ?)", u.FirstName, u.LastName, u.Email, u.Password, u.Salt,
 	)
 
 	if err != nil {
@@ -26,7 +26,7 @@ func (repo *UserRepository) Store(u model.User) (id int64, err error) {
 
 func (repo *UserRepository) Update(u model.User) (err error) {
 	_, err = repo.Sqlhandler.Execute(
-		"UPDATE users SET firstname = ?, lastname = ?, email = ?, password = ?, salt = ?, updated_at = ? WHERE id = ?;", u.FirstName, u.LastName, u.Email, u.Password, u.Salt, u.UpdatedAt, u.Id,
+		"UPDATE users SET firstname = ?, lastname = ?, email = ?, password = ?, salt = ? WHERE id = ?;", u.FirstName, u.LastName, u.Email, u.Password, u.Salt, u.Id,
 	)
 
 	if err != nil {
@@ -50,6 +50,19 @@ func (repo *UserRepository) Delete(u model.User) (err error) {
 
 func (repo *UserRepository) FindById(id int) (user model.User, err error) {
 	row, err := repo.Sqlhandler.Query("SELECT * FROM users WHERE id = ?;", id)
+	if err != nil {
+		return
+	}
+
+	row.Next()
+	if err = row.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Salt, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		return
+	}
+	return
+}
+
+func (repo *UserRepository) FindByEmail(email string) (user model.User, err error) {
+	row, err := repo.Sqlhandler.Query("SELECT * FROM users WHERE email = ?;", email)
 	if err != nil {
 		return
 	}

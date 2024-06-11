@@ -6,9 +6,12 @@ import (
 	"time"
 
 	"github.com/kairo913/tasclock/internal/env"
+	"github.com/kairo913/tasclock/internal/interfaces/database"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type SqlHandler struct {
+type Sqlhandler struct {
 	Conn *sql.DB
 }
 
@@ -24,7 +27,7 @@ func checkSqlConnect(db *sql.DB, count int) error {
 	return nil
 }
 
-func NewSqlHandler() *SqlHandler {
+func NewSqlhandler() *Sqlhandler {
 	username := env.GetEnvAsStringOrFallback("MYSQL_USER", "root")
 	password := env.GetEnvAsStringOrFallback("MYSQL_PASSWORD", "password")
 	port := env.GetEnvAsStringOrFallback("MYSQL_PORT", "3306")
@@ -46,10 +49,24 @@ func NewSqlHandler() *SqlHandler {
 		return nil
 	}
 
-	return &SqlHandler{Conn: db}
+	return &Sqlhandler{Conn: db}
 }
 
-func (handler *SqlHandler) Execute(stmt string, args ...interface{}) (sql.Result, error) {
+func CreateTable(handler *Sqlhandler) (err error) {
+	_, err = handler.Execute("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, firstname VARCHAR(255) NOT NULL, lastname VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, salt VARCHAR(255) NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);")
+	if err != nil {
+		return
+	}
+
+	_, err = handler.Execute("CREATE TABLE IF NOT EXISTS tasks (id SERIAL PRIMARY KEY, user_id INT DEFAULT NULL, title VARCHAR(255) NOT NULL, is_done TINYINT(1) NOT NULL, description TEXT, deadline DATETIME, elapsed INT NOT NULL, reward FLOAT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE);")
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (handler *Sqlhandler) Execute(stmt string, args ...interface{}) (database.Result, error) {
 	res := SqlResult{}
 
 	result, err := handler.Conn.Exec(stmt, args...)
@@ -60,7 +77,7 @@ func (handler *SqlHandler) Execute(stmt string, args ...interface{}) (sql.Result
 	return res, nil
 }
 
-func (handler *SqlHandler) Query(stmt string, args ...interface{}) (SqlRow, error) {
+func (handler *Sqlhandler) Query(stmt string, args ...interface{}) (database.Row, error) {
 	rows, err := handler.Conn.Query(stmt, args...)
 	if err != nil {
 		return SqlRow{}, err

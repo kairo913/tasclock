@@ -8,7 +8,7 @@ type TaskRepository struct {
 
 func (repo *TaskRepository) Store(t model.Task) (id int64, err error) {
 	r, err := repo.Sqlhandler.Execute(
-		"INSERT INTO tasks (user_id, title, is_done, description, deadline, elapsed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed, t.CreatedAt, t.UpdatedAt,
+		"INSERT INTO tasks (user_id, title, is_done, description, deadline, elapsed) VALUES (?, ?, ?, ?, ?, ?);", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed,
 	)
 
 	if err != nil {
@@ -26,7 +26,7 @@ func (repo *TaskRepository) Store(t model.Task) (id int64, err error) {
 
 func (repo *TaskRepository) Update(t model.Task) (err error) {
 	_, err = repo.Sqlhandler.Execute(
-		"UPDATE tasks SET user_id = ?, title = ?, is_done = ?, description = ?, deadline = ?, elapsed = ?, updated_at = ? WHERE id = ?;", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed, t.UpdatedAt, t.Id,
+		"UPDATE tasks SET user_id = ?, title = ?, is_done = ?, description = ?, deadline = ?, elapsed = ? WHERE id = ?;", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed, t.Id,
 	)
 
 	if err != nil {
