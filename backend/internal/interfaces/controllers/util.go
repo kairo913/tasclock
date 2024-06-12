@@ -8,16 +8,11 @@ import (
 	"io"
 )
 
-func MakeRandomStr(length, limit int) string {
+func MakeRandomStr(length int) string {
 	randBytes := make([]byte, length)
-	for i := 0; i < limit; i++ {
-		_, err := io.ReadFull(rand.Reader, randBytes)
-		if err == nil {
-			break
-		}
-		if i == limit-1 {
-			return ""
-		}
+	_, err := io.ReadFull(rand.Reader, randBytes)
+	if err != nil {
+		return ""
 	}
 	return base64.RawURLEncoding.WithPadding(base64.NoPadding).EncodeToString(randBytes)
 }

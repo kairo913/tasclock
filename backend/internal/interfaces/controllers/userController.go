@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -31,7 +30,7 @@ type SessionClaims struct {
 var JWTSecrets [2]string
 
 func NewUserController(c context.Context, sqlhandler database.Sqlhandler, redishandler redis.Redishandler) *UserController {
-	JWTSecrets[0] = MakeRandomStr(64, math.MaxInt)
+	JWTSecrets[0] = MakeRandomStr(64)
 	if JWTSecrets[0] == "" {
 		fmt.Println("Failed to generate JWT secret")
 		<-c.Done()
@@ -47,7 +46,7 @@ func NewUserController(c context.Context, sqlhandler database.Sqlhandler, redish
 				break LOOP
 			case <-ticker.C:
 				JWTSecrets[1] = JWTSecrets[0]
-				JWTSecrets[0] = MakeRandomStr(64, math.MaxInt)
+				JWTSecrets[0] = MakeRandomStr(64)
 				if JWTSecrets[0] == "" {
 					fmt.Println("Failed to generate JWT secret")
 					<-c.Done()
@@ -87,7 +86,7 @@ func (controller *UserController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 	}
 
-	salt := MakeRandomStr(64, 100)
+	salt := MakeRandomStr(64)
 	if salt == "" {
 		c.Status(http.StatusInternalServerError)
 	}
@@ -162,9 +161,9 @@ func (controller *UserController) Login(c *gin.Context) {
 	var sessionId string
 
 	for i := 0; i < 10000; i++ {
-		sessionId = MakeRandomStr(64, 10000)
+		sessionId = MakeRandomStr(64)
 		if sessionId == "" {
-			c.Status(http.StatusInternalServerError)
+			continue
 		}
 		value, err := controller.SessionInteractor.SessionRepository.Get(sessionId)
 		if err != nil {
@@ -200,7 +199,7 @@ func (controller *UserController) Login(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 	}
 
-	c.Header("Authorization", "Bearer " + tokenString)
+	c.Header("Authorization", "Bearer "+tokenString)
 	c.JSON(http.StatusOK, user.LastName)
 }
 
@@ -248,8 +247,9 @@ func (controller *UserController) Auth(t string) error {
 
 	if Hash(userId, hash_count) != claims.Audience[0] {
 		controller.SessionInteractor.FlushAll()
-		JWTSecrets[0] = MakeRandomStr(64, math.MaxInt)
+		JWTSecrets[0] = MakeRandomStr(64)
 		if JWTSecrets[0] == "" {
+			fmt.Println("Failed to generate JWT secret")
 			return fmt.Errorf("secret")
 		}
 		return fmt.Errorf("insufficient_scope")
