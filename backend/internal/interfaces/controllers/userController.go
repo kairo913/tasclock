@@ -78,27 +78,32 @@ func (controller *UserController) Create(c *gin.Context) {
 	}
 
 	if err := c.BindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
 	}
 
 	validate := validator.New()
 	if err := validate.Struct(body); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
 	}
 
 	salt := MakeRandomStr(64)
 	if salt == "" {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	hash_count, err := env.GetEnvAsIntOrFallback("HASH_COUNT", 100000)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	secret_salt := env.GetEnvAsStringOrFallback("PEPPER", "")
 	if secret_salt == "" {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	user := model.User{
@@ -111,7 +116,9 @@ func (controller *UserController) Create(c *gin.Context) {
 
 	id, err := controller.UserInteractor.Add(user)
 	if err != nil {
+		fmt.Println(err)
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	user.Id = int(id)
@@ -127,35 +134,42 @@ func (controller *UserController) Login(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.Status(http.StatusBadRequest)
+		return
 	}
 
 	validate := validator.New()
 	if err := validate.Struct(body); err != nil {
 		c.Status(http.StatusBadRequest)
+		return
 	}
 
 	user, err := controller.UserInteractor.FindByEmail(body.Email)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	hash_count, err := env.GetEnvAsIntOrFallback("HASH_COUNT", 100000)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	secret_salt := env.GetEnvAsStringOrFallback("PEPPER", "")
 	if secret_salt == "" {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	if user.Password != Hash(body.Password+user.Salt+secret_salt, hash_count) {
 		c.Status(http.StatusUnauthorized)
+		return
 	}
 
 	expire, err := env.GetEnvAsIntOrFallback("SESSION_EXPIRE", 3600)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	var sessionId string
@@ -168,6 +182,7 @@ func (controller *UserController) Login(c *gin.Context) {
 		value, err := controller.SessionInteractor.SessionRepository.Get(sessionId)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
+			return
 		}
 		if value == "" {
 			break
@@ -176,6 +191,7 @@ func (controller *UserController) Login(c *gin.Context) {
 
 	if sessionId == "" {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &SessionClaims{
@@ -192,11 +208,13 @@ func (controller *UserController) Login(c *gin.Context) {
 	tokenString, err := token.SignedString([]byte(JWTSecrets[0]))
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	err = controller.SessionInteractor.SessionRepository.Set(sessionId, strconv.Itoa(user.Id), time.Duration(expire)*time.Second)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
+		return
 	}
 
 	c.Header("Authorization", "Bearer "+tokenString)
