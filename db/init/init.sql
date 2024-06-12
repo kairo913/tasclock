@@ -1,28 +1,23 @@
 CREATE TABLE IF NOT EXISTS tasclock.users (
-    `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-    `name` TEXT NOT NULL,
-    `email` TEXT NOT NULL,
-    `password` TEXT NOT NULL,
-    `salt` TEXT NOT NULL,
-    `created_at` TEXT NOT NULL,
-    `updated_at` TEXT NOT NULL
-) DEFAULT CHARSET=utf8mb4 ENGINE=InnoDB;
-CREATE TABLE IF NOT EXISTS tasclock.lists (
-    `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
-    `title` TEXT NOT NULL,
-    `description` TEXT,
-    `created_at` TEXT NOT NULL,
-    `updated_at` TEXT NOT NULL,
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    `id` SERIAL PRIMARY KEY,
+    `firstname` VARCHAR(255) NOT NULL,
+    `lastname` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
+    `salt` VARCHAR(255) NOT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) DEFAULT CHARSET=utf8mb4 ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS tasclock.tasks (
-    `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-    `list_id` INTEGER NOT NULL,
-    `title` TEXT NOT NULL,
+    `id` SERIAL PRIMARY KEY,
+    `user_id` BIGINT UNSIGNED DEFAULT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `is_done` TINYINT(1) NOT NULL DEFAULT 0,
     `description` TEXT,
-    `completed` BOOLEAN NOT NULL DEFAULT FALSE,
-    `created_at` TEXT NOT NULL,
-    `updated_at` TEXT NOT NULL,
-    FOREIGN KEY (`list_id`) REFERENCES `lists`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    `deadline` DATETIME,
+    `elapsed` INTEGER NOT NULL DEFAULT 0,
+    `reward` FLOAT,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARSET=utf8mb4 ENGINE=InnoDB;
