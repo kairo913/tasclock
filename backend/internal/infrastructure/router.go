@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/kairo913/tasclock/internal/interfaces/controllers"
 )
@@ -22,8 +23,10 @@ func SetUpRouter(c context.Context) *gin.Engine {
 	userController := controllers.NewUserController(c, sqlhandler, redishandler)
 	taskController := controllers.NewTaskController(sqlhandler)
 
-	router.POST("/user/signup", userController.Create)
-	router.POST("/user/login", userController.Login)
+	router.Use(CorsMiddleware(), ContentTypeMiddleware())
+
+	router.POST("user/signup", userController.Create)
+	router.POST("user/login", userController.Login)
 
 	taskGrop := router.Group("/task", AuthMiddleware(c, userController))
 	{
@@ -31,6 +34,25 @@ func SetUpRouter(c context.Context) *gin.Engine {
 	}
 
 	return router
+}
+
+func CorsMiddleware() gin.HandlerFunc {
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:8000"}
+	config.AllowMethods = []string{"GET", "POST"}
+	config.AllowHeaders = []string{"Authorization"}
+	return cors.New(config)
+}
+
+func ContentTypeMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Header.Get("Content-Type") != "application/json" {
+			c.Status(http.StatusBadRequest)
+			c.Abort()
+		} else {
+			c.Next()
+		}
+	}
 }
 
 func AuthMiddleware(ctx context.Context, uc *controllers.UserController) gin.HandlerFunc {
