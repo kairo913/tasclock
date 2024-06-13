@@ -25,12 +25,16 @@ func SetUpRouter(c context.Context) *gin.Engine {
 
 	router.Use(CorsMiddleware(), ContentTypeMiddleware())
 
-	router.POST("user/signup", userController.Create)
-	router.POST("user/login", userController.Login)
-
-	taskGrop := router.Group("/task", AuthMiddleware(c, userController))
+	userGroup := router.Group("/user")
 	{
-		taskGrop.POST("/create", taskController.Create)
+		userGroup.POST("/signup", userController.Create)
+		userGroup.POST("/login", userController.Login)
+		userGroup.POST("/logout", AuthMiddleware(c, userController), userController.Logout)
+	}
+
+	taskGroup := router.Group("/task", AuthMiddleware(c, userController))
+	{
+		taskGroup.POST("/create", taskController.Create)
 	}
 
 	return router

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -227,7 +228,31 @@ func (controller *UserController) Login(c *gin.Context) {
 }
 
 func (controller *UserController) Logout(c *gin.Context) {
+	t := c.GetHeader("Authorization")
+	t = strings.TrimPrefix(t, "Bearer ")
 
+	var token *jwt.Token
+	var err error
+	for _, secret := range JWTSecrets {
+		token, err = jwt.ParseWithClaims(t, &SessionClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(secret), nil
+		})
+		if err != nil || !token.Valid {
+			token = nil
+		} else {
+			break
+		}
+	}
+	if token == nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	claims, _ := token.Claims.(*SessionClaims)
+
+	controller.SessionInteractor.SessionRepository.Del(claims.SessionId)
+
+	c.Status(http.StatusNoContent)
 }
 
 func (controller *UserController) Auth(t string) error {
