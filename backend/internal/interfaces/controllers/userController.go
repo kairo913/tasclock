@@ -116,7 +116,6 @@ func (controller *UserController) Create(c *gin.Context) {
 
 	id, err := controller.UserInteractor.Add(user)
 	if err != nil {
-		fmt.Println(err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
