@@ -88,6 +88,12 @@ func (controller *UserController) Create(c *gin.Context) {
 		return
 	}
 
+	_, err := controller.UserInteractor.FindByEmail(body.Email)
+	if err == nil {
+		c.Status(http.StatusConflict)
+		return
+	}
+
 	salt := MakeRandomStr(64)
 	if salt == "" {
 		c.Status(http.StatusInternalServerError)
