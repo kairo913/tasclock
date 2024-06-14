@@ -79,7 +79,6 @@ func (controller *UserController) Create(c *gin.Context) {
 	}
 
 	if err := c.BindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
