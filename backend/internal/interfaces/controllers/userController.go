@@ -251,6 +251,7 @@ func (controller *UserController) Logout(c *gin.Context) {
 
 	controller.SessionInteractor.SessionRepository.Del(claims.SessionId)
 
+	c.Header("Authorization", "Bearer ")
 	c.Status(http.StatusNoContent)
 }
 
