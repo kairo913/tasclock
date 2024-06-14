@@ -255,7 +255,13 @@ func (controller *UserController) Logout(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (controller *UserController) Auth(t string) error {
+func (controller *UserController) Auth(c *gin.Context) (string, error) {
+	t := c.GetHeader("Authorization")
+	if t == "" {
+		return "", fmt.Errorf("token_required")
+	}
+	t = strings.TrimPrefix(t, "Bearer ")
+
 	var token *jwt.Token
 	var err error
 	for _, secret := range JWTSecrets {
@@ -269,28 +275,28 @@ func (controller *UserController) Auth(t string) error {
 		}
 	}
 	if token == nil {
-		return fmt.Errorf("invalid_token")
+		return "", fmt.Errorf("invalid_token")
 	}
 
 	claims, ok := token.Claims.(*SessionClaims)
 	if !ok {
-		return fmt.Errorf("invalid_token")
+		return "", fmt.Errorf("invalid_token")
 	}
 	if claims.SessionId == "" || claims.Audience[0] == "" || claims.Issuer != "tasclock" {
-		return fmt.Errorf("invalid_request")
+		return "", fmt.Errorf("invalid_request")
 	}
 
 	userId, err := controller.SessionInteractor.Get(claims.SessionId)
 	if err != nil {
-		return fmt.Errorf("internal")
+		return "", fmt.Errorf("internal")
 	}
 	if userId == "" {
-		return fmt.Errorf("invalid_request")
+		return "", fmt.Errorf("invalid_request")
 	}
 
 	hash_count, err := env.GetEnvAsIntOrFallback("HASH_COUNT", 100000)
 	if err != nil {
-		return fmt.Errorf("internal")
+		return "", fmt.Errorf("internal")
 	}
 
 	if Hash(userId, hash_count) != claims.Audience[0] {
@@ -298,10 +304,10 @@ func (controller *UserController) Auth(t string) error {
 		JWTSecrets[0] = MakeRandomStr(64)
 		if JWTSecrets[0] == "" {
 			fmt.Println("Failed to generate JWT secret")
-			return fmt.Errorf("secret")
+			return "", fmt.Errorf("secret")
 		}
-		return fmt.Errorf("insufficient_scope")
+		return "", fmt.Errorf("insufficient_scope")
 	}
 
-	return nil
+	return userId, nil
 }

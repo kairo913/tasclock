@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -13,6 +12,7 @@ import (
 
 func SetUpRouter(c context.Context) *gin.Engine {
 	router := gin.Default()
+	router.ContextWithFallback = true
 
 	sqlhandler := NewSqlhandler()
 	redishandler := NewRedishandler()
@@ -27,8 +27,8 @@ func SetUpRouter(c context.Context) *gin.Engine {
 
 	userGroup := router.Group("/user")
 	{
-		userGroup.POST("/signup", LogoutMiddleware(c, userController), userController.Create)
-		userGroup.POST("/login", LogoutMiddleware(c, userController), userController.Login)
+		userGroup.POST("/signup", userController.Create)
+		userGroup.POST("/login", userController.Login)
 		userGroup.POST("/logout", AuthMiddleware(c, userController), userController.Logout)
 	}
 
@@ -59,56 +59,15 @@ func ContentTypeMiddleware() gin.HandlerFunc {
 	}
 }
 
-func LogoutMiddleware(ctx context.Context, uc *controllers.UserController) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := c.GetHeader("Authorization")
-		if token == "" {
-			c.Next()
-			return
-		}
-		token = strings.TrimPrefix(token, "Bearer ")
-
-		err := uc.Auth(token)
-		if err == nil {
-			c.Status(http.StatusConflict)
-			c.Abort()
-			return
-		}
-		switch err.Error() {
-		case "internal":
-			c.Status(http.StatusInternalServerError)
-			c.Abort()
-			return
-		case "insufficient_scope":
-			c.Status(http.StatusForbidden)
-			c.Abort()
-			return
-		case "secret":
-			c.Status(http.StatusInternalServerError)
-			c.Abort()
-			<-ctx.Done()
-			return
-		}
-
-		c.Next()
-	}
-}
-
 func AuthMiddleware(ctx context.Context, uc *controllers.UserController) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.GetHeader("Authorization")
-		if token == "" {
-			c.Header("WWW-Authenticate", "Bearer realm=\"token_required\"")
-			c.Status(http.StatusUnauthorized)
-			c.Abort()
-			return
-		}
-
-		token = strings.TrimPrefix(token, "Bearer ")
-
-		err := uc.Auth(token)
+		userId, err := uc.Auth(c)
 		if err != nil {
 			switch err.Error() {
+			case "token_required":
+				c.Header("WWW-Authenticate", "Bearer error=\"token_required\"")
+				c.Status(http.StatusUnauthorized)
+				c.Abort()
 			case "internal":
 				c.Status(http.StatusInternalServerError)
 				c.Abort()
@@ -131,6 +90,8 @@ func AuthMiddleware(ctx context.Context, uc *controllers.UserController) gin.Han
 			}
 			return
 		}
+
+		c.Set("userId", userId)
 
 		c.Next()
 	}
