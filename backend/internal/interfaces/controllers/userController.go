@@ -63,7 +63,7 @@ func NewUserController(c context.Context, sqlhandler database.Sqlhandler, redish
 			},
 		},
 		SessionInteractor: usecase.SessionInteractor{
-			SessionRepository: &redis.SessionRepository{
+			SessionRepository: &redis.RedisRepository{
 				Redishandler: redishandler,
 			},
 		},
