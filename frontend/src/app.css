@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+    @apply h-full w-full flex justify-center text-center font-sans;
+}
+
+body {
+    @apply h-full w-full p-2 bg-gray-100 text-black;
+}
+
+body.dark {
+    @apply bg-gray-900 text-white;
+}

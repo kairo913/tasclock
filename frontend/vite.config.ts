@@ -1,10 +1,11 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
-import VitePluginBrowserSync from "vite-plugin-browser-sync";
 
 export default defineConfig({
-    plugins: [sveltekit(), VitePluginBrowserSync()],
+    plugins: [sveltekit()],
     server: {
+        host: true,
+        port: 8080,
         watch: {
             usePolling: true,
             interval: 1000,
