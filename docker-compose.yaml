@@ -17,9 +17,10 @@ services:
       - ./backend:/app
       - go_build_cache:/app/tmp
     working_dir: /app
-    command: sh -c "go mod tidy && air"
+    command: ["air"]
     depends_on:
       - db
+      - redis
   web:
     build:
       context: frontend
@@ -46,3 +47,5 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/init:/docker-entrypoint-initdb.d
+  redis:
+    image: redis:alpine
