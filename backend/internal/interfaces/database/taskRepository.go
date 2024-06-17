@@ -55,7 +55,7 @@ func (repo *TaskRepository) FindById(id int) (task model.Task, err error) {
 	}
 
 	row.Next()
-	if err = row.Scan(&task.Id, &task.UserId, &task.Title, &task.IsDone, &task.Description, &task.Deadline, &task.Elapsed, &task.CreatedAt, &task.UpdatedAt); err != nil {
+	if err = row.Scan(&task.Id, &task.UserId, &task.Title, &task.IsDone, &task.Description, &task.Deadline, &task.Elapsed, &task.Reward, &task.CreatedAt, &task.UpdatedAt); err != nil {
 		return
 	}
 
