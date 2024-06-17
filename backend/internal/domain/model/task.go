@@ -7,10 +7,10 @@ type Task struct {
 	UserId      int       `json:"user_id"`
 	Title       string    `json:"title"`
 	IsDone      bool      `json:"is_done"`
-	Description string    `json:"description"`
-	Deadline    time.Time `json:"deadline"`
+	Description *string    `json:"description"`
+	Deadline    *time.Time `json:"deadline"`
 	Elapsed     int       `json:"elapsed"`
-	Reward      float64   `json:"reward"`
+	Reward      *float64   `json:"reward"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

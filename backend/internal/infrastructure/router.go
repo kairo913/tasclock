@@ -35,6 +35,9 @@ func SetUpRouter(c context.Context) *gin.Engine {
 	taskGroup := router.Group("/task", AuthMiddleware(c, userController))
 	{
 		taskGroup.POST("/create", taskController.Create)
+		taskGroup.POST("/update", taskController.Update)
+		taskGroup.GET("", taskController.Get)
+		taskGroup.POST("/delete", taskController.Delete)
 	}
 
 	return router

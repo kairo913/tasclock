@@ -1,6 +1,10 @@
 package database
 
-import "github.com/kairo913/tasclock/internal/domain/model"
+import (
+	"database/sql"
+
+	"github.com/kairo913/tasclock/internal/domain/model"
+)
 
 type TaskRepository struct {
 	Sqlhandler
@@ -8,7 +12,7 @@ type TaskRepository struct {
 
 func (repo *TaskRepository) Store(t model.Task) (id int64, err error) {
 	r, err := repo.Sqlhandler.Execute(
-		"INSERT INTO tasks (user_id, title, is_done, description, deadline, elapsed) VALUES (?, ?, ?, ?, ?, ?);", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed,
+		"INSERT INTO tasks (user_id, title, is_done, description, deadline, elapsed, reward) VALUES (?, ?, ?, ?, ?, ?, ?);", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed, t.Reward,
 	)
 
 	if err != nil {
@@ -26,7 +30,7 @@ func (repo *TaskRepository) Store(t model.Task) (id int64, err error) {
 
 func (repo *TaskRepository) Update(t model.Task) (err error) {
 	_, err = repo.Sqlhandler.Execute(
-		"UPDATE tasks SET user_id = ?, title = ?, is_done = ?, description = ?, deadline = ?, elapsed = ? WHERE id = ?;", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed, t.Id,
+		"UPDATE tasks SET user_id = ?, title = ?, is_done = ?, description = ?, deadline = ?, elapsed = ?, reward = ? WHERE id = ?;", t.UserId, t.Title, t.IsDone, t.Description, t.Deadline, t.Elapsed, t.Reward, t.Id,
 	)
 
 	if err != nil {
@@ -54,9 +58,12 @@ func (repo *TaskRepository) FindById(id int) (task model.Task, err error) {
 		return
 	}
 
-	row.Next()
-	if err = row.Scan(&task.Id, &task.UserId, &task.Title, &task.IsDone, &task.Description, &task.Deadline, &task.Elapsed, &task.Reward, &task.CreatedAt, &task.UpdatedAt); err != nil {
-		return
+	if row.Next() {
+		if err = row.Scan(&task.Id, &task.UserId, &task.Title, &task.IsDone, &task.Description, &task.Deadline, &task.Elapsed, &task.Reward, &task.CreatedAt, &task.UpdatedAt); err != nil {
+			return
+		}
+	} else {
+		err = sql.ErrNoRows
 	}
 
 	return
@@ -70,7 +77,7 @@ func (repo *TaskRepository) FindByUserId(userId int) (tasks model.Tasks, err err
 
 	for rows.Next() {
 		var task model.Task
-		if err = rows.Scan(&task.Id, &task.UserId, &task.Title, &task.IsDone, &task.Description, &task.Deadline, &task.Elapsed, &task.CreatedAt, &task.UpdatedAt); err != nil {
+		if err = rows.Scan(&task.Id, &task.UserId, &task.Title, &task.IsDone, &task.Description, &task.Deadline, &task.Elapsed, &task.Reward, &task.CreatedAt, &task.UpdatedAt); err != nil {
 			return
 		}
 		tasks = append(tasks, task)
