@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tasclock.users (
 ) DEFAULT CHARSET=utf8mb4 ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS tasclock.tasks (
     `id` SERIAL PRIMARY KEY,
-    `user_id` BIGINT UNSIGNED DEFAULT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `is_done` TINYINT(1) NOT NULL DEFAULT 0,
     `description` TEXT,
