@@ -1,0 +1,3 @@
+[submodule "tasclock-server"]
+	path = tasclock-server
+	url = https://github.com/kairo913/tasclock-server.git
